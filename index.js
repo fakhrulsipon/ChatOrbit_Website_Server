@@ -247,6 +247,22 @@ async function run() {
         });
 
 
+        app.get('/latest', async (req, res) => {
+            try {
+                const latestPosts = await postsCollection
+                    .find({})
+                    .sort({ _id: -1 })
+                    .limit(8) 
+                    .toArray();
+
+                res.send(latestPosts)
+            } catch (err) {
+                console.error(err);
+                res.status(500).json({ message: 'Failed to fetch latest posts' });
+            }
+        });
+
+
         // single post get api
         app.get('/post/:postId', async (req, res) => {
             const { postId } = req.params;
