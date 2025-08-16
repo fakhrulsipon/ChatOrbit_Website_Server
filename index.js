@@ -246,19 +246,35 @@ async function run() {
             res.send({ posts, total });
         });
 
-
+        // latest post
         app.get('/latest', async (req, res) => {
             try {
                 const latestPosts = await postsCollection
                     .find({})
                     .sort({ _id: -1 })
-                    .limit(8) 
+                    .limit(8)
                     .toArray();
 
                 res.send(latestPosts)
             } catch (err) {
                 console.error(err);
                 res.status(500).json({ message: 'Failed to fetch latest posts' });
+            }
+        });
+
+        // top voted post
+        app.get('/top-voted', async (req, res) => {
+            try {
+                const topVotedPosts = await postsCollection
+                    .find({})
+                    .sort({ upVote: -1 })
+                    .limit(8)
+                    .toArray();
+
+                res.send(topVotedPosts);
+            } catch (err) {
+                console.error(err);
+                res.status(500).json({ message: 'Failed to fetch top voted posts' });
             }
         });
 
