@@ -9,7 +9,7 @@ const stripe = require('stripe')(process.env.PAYMENT_GATEWAY_KEY);
 const port = process.env.PORT || 5000
 
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://super-gelato-a1166f.netlify.app'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'https://super-gelato-a1166f.netlify.app'],
     credentials: true
 }))
 app.use(express.json());
@@ -202,7 +202,7 @@ async function run() {
         app.get('/posts', async (req, res) => {
             const { page = 1, sort = 'newest', tag = '' } = req.query;
 
-            const skip = (parseInt(page) - 1) * 5;
+            const skip = (parseInt(page) - 1) * 12;
 
             let pipeline = [];
 
@@ -232,7 +232,7 @@ async function run() {
             }
 
             // pagination
-            pipeline.push({ $skip: skip }, { $limit: 5 });
+            pipeline.push({ $skip: skip }, { $limit: 12 });
 
             // fetch posts
             const posts = await postsCollection.aggregate(pipeline).toArray();
