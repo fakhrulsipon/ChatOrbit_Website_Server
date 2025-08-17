@@ -235,7 +235,28 @@ async function run() {
             pipeline.push({ $skip: skip }, { $limit: 12 });
 
             // fetch posts
-            const posts = await postsCollection.aggregate(pipeline).toArray();
+            let posts = await postsCollection.aggregate(pipeline).toArray();
+
+            // every post er comment count
+            const postIds = posts.map(post => post._id.toString());
+            const commentsCount = await commentCollection.aggregate([
+                { $match: { postId: { $in: postIds } } },
+                {
+                    $group: {
+                        _id: "$postId",
+                        totalComments: { $sum: 1 }
+                    }
+                }
+            ]).toArray();
+
+            // posts array তে comment count যোগ করা
+            posts = posts.map(post => {
+                const commentData = commentsCount.find(c => c._id === post._id.toString());
+                return {
+                    ...post,
+                    totalComments: commentData ? commentData.totalComments : 0
+                };
+            });
 
             // count matching total posts for pagination
             const countQuery = tag
@@ -393,6 +414,19 @@ async function run() {
 
         // server.js or routes file
         app.get("/admin-stats", verifyToken, verifyAdmin, async (req, res) => {
+            try {
+                const totalPosts = await postsCollection.estimatedDocumentCount();
+                const totalComments = await commentCollection.estimatedDocumentCount();
+                const totalUsers = await usersCollection.estimatedDocumentCount();
+
+                res.json({ totalPosts, totalComments, totalUsers });
+            } catch (err) {
+                res.status(500).json({ message: "Failed to get stats" });
+            }
+        });
+
+        // server.js or routes file
+        app.get("/overView-stats", verifyToken, async (req, res) => {
             try {
                 const totalPosts = await postsCollection.estimatedDocumentCount();
                 const totalComments = await commentCollection.estimatedDocumentCount();
